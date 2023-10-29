@@ -23,7 +23,7 @@ type TaskUsecase interface {
 	Create(context.Context, *Task) error
 }
 
-// ArticleRepository represent the article's repository contract
+// TaskRepository represent the article's repository contract
 type TaskRepository interface {
 	Create(ctx context.Context, a *Task) error
 }
