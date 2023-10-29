@@ -6,11 +6,11 @@
     "context":{
       "timeout":2
     },
-    "database": {
-        "host": "localhost",
-        "port": "3306",
-        "user": "root",
-        "pass": "",
-        "name": "todo"
+    "database":{
+      "host": "localhost",
+      "port": "27017",
+      "user": "root",
+      "pass": 1234,
+      "name": "todo"
     }
 }
