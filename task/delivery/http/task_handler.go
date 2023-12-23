@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
@@ -25,8 +26,9 @@ func NewTaskHandler(e *echo.Echo, us domain.TaskUsecase) {
 	handler := &TaskHandler{
 		TUsecase: us,
 	}
+	e.GET("/tasks", handler.FetchTask)
+	e.GET("/task/:id", handler.GetByID)
 	e.POST("/task", handler.Create)
-	// e.GET("/task/:id", handler.GetByID)
 }
 
 func isRequestValid(m *domain.Task) (bool, error) {
@@ -36,6 +38,21 @@ func isRequestValid(m *domain.Task) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// FetchTask will fetch the article based on given params
+func (a *TaskHandler) FetchTask(c echo.Context) error {
+	numS := c.QueryParam("num")
+	num, _ := strconv.Atoi(numS)
+	cursor := c.QueryParam("cursor")
+	ctx := c.Request().Context()
+
+	listTask, nextCursor, err := a.TUsecase.Fetch(ctx, cursor, int64(num))
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+	c.Response().Header().Set(`X-Cursor`, nextCursor)
+	return c.JSON(http.StatusOK, listTask)
 }
 
 // Create will create the task by given request body
@@ -58,6 +75,24 @@ func (a *TaskHandler) Create(c echo.Context) (err error) {
 	}
 
 	return c.JSON(http.StatusCreated, task)
+}
+
+// GetByID will get article by given id
+func (a *TaskHandler) GetByID(c echo.Context) error {
+	idP, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusNotFound, domain.ErrNotFound.Error())
+	}
+
+	id := int64(idP)
+	ctx := c.Request().Context()
+
+	art, err := a.TUsecase.GetByID(ctx, id)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, art)
 }
 
 func getStatusCode(err error) int {

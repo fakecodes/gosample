@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/fakecodes/gosample/domain"
+	"github.com/fakecodes/gosample/task/repository"
 )
 
 type postgresTaskRepository struct {
@@ -28,5 +30,76 @@ func (m *postgresTaskRepository) Create(ctx context.Context, a *domain.Task) (er
 		return err
 	}
 	_, err = res.RowsAffected()
+	return
+}
+
+func (m *postgresTaskRepository) fetch(ctx context.Context, query string, args ...interface{}) (result []domain.Task, err error) {
+	rows, err := m.Conn.QueryContext(ctx, query, args...)
+	if err != nil {
+		log.Panic(err)
+		return nil, err
+	}
+
+	defer func() {
+		errRow := rows.Close()
+		if errRow != nil {
+			log.Panic(errRow)
+		}
+	}()
+
+	result = make([]domain.Task, 0)
+	for rows.Next() {
+		t := domain.Task{}
+		err = rows.Scan(
+			&t.ID,
+			&t.Name,
+			&t.Description,
+			&t.CreatedAt,
+			&t.DueDate,
+			&t.Priority,
+			&t.Completed,
+		)
+
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		result = append(result, t)
+	}
+	return result, nil
+}
+
+func (m *postgresTaskRepository) Fetch(ctx context.Context, cursor string, num int64) (res []domain.Task, nextCursor string, err error) {
+	query := `SELECT id, name, description, created_at, due_date, priority, completed FROM tasks WHERE created_at > $1 ORDER BY created_at LIMIT $2`
+
+	decodedCursor, err := repository.DecodeCursor(cursor)
+	if err != nil && cursor != "" {
+		return nil, "", domain.ErrBadParamInput
+	}
+
+	res, err = m.fetch(ctx, query, decodedCursor, num)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(res) == int(num) {
+		nextCursor = repository.EncodeCursor(res[len(res)-1].CreatedAt)
+	}
+	return
+}
+
+func (m *postgresTaskRepository) GetByID(ctx context.Context, id int64) (res domain.Task, err error) {
+	query := `SELECT id, name, description, created_at, due_date, priority, completed FROM tasks WHERE ID = $1`
+
+	list, err := m.fetch(ctx, query, id)
+	if err != nil {
+		return domain.Task{}, err
+	}
+
+	if len(list) > 0 {
+		res = list[0]
+	} else {
+		return res, domain.ErrNotFound
+	}
 	return
 }

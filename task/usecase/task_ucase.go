@@ -27,3 +27,29 @@ func (a *taskUsecase) Create(c context.Context, m *domain.Task) (err error) {
 	err = a.taskRepo.Create(ctx, m)
 	return
 }
+
+func (a *taskUsecase) Fetch(c context.Context, cursor string, num int64) (res []domain.Task, nextCursor string, err error) {
+	if num == 0 {
+		num = 10
+	}
+
+	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
+	defer cancel()
+
+	res, nextCursor, err = a.taskRepo.Fetch(ctx, cursor, num)
+	if err != nil {
+		return nil, "", err
+	}
+	return
+}
+
+func (a *taskUsecase) GetByID(c context.Context, id int64) (res domain.Task, err error) {
+	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
+	defer cancel()
+
+	res, err = a.taskRepo.GetByID(ctx, id)
+	if err != nil {
+		return
+	}
+	return
+}
