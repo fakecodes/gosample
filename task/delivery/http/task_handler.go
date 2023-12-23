@@ -29,6 +29,7 @@ func NewTaskHandler(e *echo.Echo, us domain.TaskUsecase) {
 	e.GET("/tasks", handler.FetchTask)
 	e.GET("/task/:id", handler.GetByID)
 	e.POST("/task", handler.Create)
+	e.DELETE("/task/:id", handler.Delete)
 }
 
 func isRequestValid(m *domain.Task) (bool, error) {
@@ -40,7 +41,7 @@ func isRequestValid(m *domain.Task) (bool, error) {
 	return true, nil
 }
 
-// FetchTask will fetch the article based on given params
+// FetchTask will fetch the task based on given params
 func (a *TaskHandler) FetchTask(c echo.Context) error {
 	numS := c.QueryParam("num")
 	num, _ := strconv.Atoi(numS)
@@ -77,7 +78,7 @@ func (a *TaskHandler) Create(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, task)
 }
 
-// GetByID will get article by given id
+// GetByID will get task by given id
 func (a *TaskHandler) GetByID(c echo.Context) error {
 	idP, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -93,6 +94,24 @@ func (a *TaskHandler) GetByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, art)
+}
+
+// Delete will delete task by given param
+func (a *TaskHandler) Delete(c echo.Context) error {
+	idP, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusNotFound, domain.ErrNotFound.Error())
+	}
+
+	id := int64(idP)
+	ctx := c.Request().Context()
+
+	err = a.TUsecase.Delete(ctx, id)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func getStatusCode(err error) int {

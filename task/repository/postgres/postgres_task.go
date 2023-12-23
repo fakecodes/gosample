@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/fakecodes/gosample/domain"
@@ -100,6 +101,31 @@ func (m *postgresTaskRepository) GetByID(ctx context.Context, id int64) (res dom
 		res = list[0]
 	} else {
 		return res, domain.ErrNotFound
+	}
+	return
+}
+
+func (m *postgresTaskRepository) Delete(ctx context.Context, id int64) (err error) {
+	query := "DELETE FROM tasks WHERE id = $1"
+
+	stmt, err := m.Conn.PrepareContext(ctx, query)
+	if err != nil {
+		return
+	}
+
+	res, err := stmt.ExecContext(ctx, id)
+	if err != nil {
+		return
+	}
+
+	rowsAfected, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+
+	if rowsAfected != 1 {
+		err = fmt.Errorf("weird  Behavior. Total Affected: %d", rowsAfected)
+		return
 	}
 	return
 }

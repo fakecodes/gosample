@@ -53,3 +53,16 @@ func (a *taskUsecase) GetByID(c context.Context, id int64) (res domain.Task, err
 	}
 	return
 }
+
+func (a *taskUsecase) Delete(c context.Context, id int64) (err error) {
+	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
+	defer cancel()
+	existedTask, err := a.taskRepo.GetByID(ctx, id)
+	if err != nil {
+		return
+	}
+	if existedTask == (domain.Task{}) {
+		return domain.ErrNotFound
+	}
+	return a.taskRepo.Delete(ctx, id)
+}

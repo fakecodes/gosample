@@ -21,6 +21,7 @@ type TaskUsecase interface {
 	Fetch(ctx context.Context, cursor string, num int64) ([]Task, string, error)
 	GetByID(ctx context.Context, id int64) (Task, error)
 	Create(context.Context, *Task) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // TaskRepository represent the task's repository contract
@@ -28,4 +29,5 @@ type TaskRepository interface {
 	Fetch(ctx context.Context, cursor string, num int64) (res []Task, nextCursor string, err error)
 	GetByID(ctx context.Context, id int64) (Task, error)
 	Create(ctx context.Context, a *Task) error
+	Delete(ctx context.Context, id int64) error
 }
