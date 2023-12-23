@@ -26,6 +26,7 @@ func NewTaskHandler(e *echo.Echo, us domain.TaskUsecase) {
 		TUsecase: us,
 	}
 	e.POST("/task", handler.Create)
+	// e.GET("/task/:id", handler.GetByID)
 }
 
 func isRequestValid(m *domain.Task) (bool, error) {
@@ -37,7 +38,7 @@ func isRequestValid(m *domain.Task) (bool, error) {
 	return true, nil
 }
 
-// Create will create the article by given request body
+// Create will create the task by given request body
 func (a *TaskHandler) Create(c echo.Context) (err error) {
 	var task domain.Task
 	err = c.Bind(&task)

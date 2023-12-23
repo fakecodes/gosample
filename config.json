@@ -8,9 +8,9 @@
     },
     "database":{
       "host": "localhost",
-      "port": "27017",
-      "user": "root",
-      "pass": 1234,
-      "name": "todo"
+      "port": 5432,
+      "user": "admin",
+      "pass": "password",
+      "name": "task"
     }
 }
