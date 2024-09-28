@@ -69,3 +69,4 @@ func main() {
 
 	log.Fatal(e.Start(viper.GetString("server.address"))) //nolint
 }
+// dummy changes
